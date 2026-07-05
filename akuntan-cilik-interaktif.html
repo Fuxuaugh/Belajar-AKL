@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Tabungan Ilmu — Akuntan Cilik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF7ED;
+    --paper-line:#DCD2B4;
+    --cover:#1B3A2F;
+    --cover-2:#264F3E;
+    --ink:#22303C;
+    --ink-soft:#5B6B6A;
+    --brass:#A9792C;
+    --brass-light:#D9B65C;
+    --income:#2F6F4E;
+    --expense:#A6383B;
+    --card:#ffffff;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cover);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.04), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,255,255,0.03), transparent 40%);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{
+    max-width:920px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+
+  /* ===== Passbook cover header ===== */
+  .cover{
+    background:linear-gradient(155deg,var(--cover) 0%,var(--cover-2) 100%);
+    border-radius:14px;
+    padding:22px 24px;
+    color:#F3EFE1;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  }
+  .cover::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 26px);
+    pointer-events:none;
+  }
+  .cover-eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--brass-light);
+    margin-bottom:6px;
+  }
+  .cover-title{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(26px,5vw,36px);
+    margin:0 0 4px;
+    line-height:1.1;
+  }
+  .cover-sub{
+    font-size:13.5px;
+    color:#D6D0BE;
+    max-width:520px;
+    margin:0;
+  }
+  .passbook-row{
+    margin-top:18px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:stretch;
+  }
+  .stat{
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;
+    padding:10px 14px;
+    flex:1;
+    min-width:130px;
+  }
+  .stat-label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#B9C9BC;
+    margin-bottom:4px;
+  }
+  .stat-value{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:19px;
+    color:var(--brass-light);
+  }
+  .stat-value.small{font-size:16px;color:#F3EFE1;}
+
+  /* ===== Tabs ===== */
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin:18px 0 0;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .tab{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    font-weight:700;
+    color:#EDE7D3;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    border-bottom:none;
+    padding:10px 16px;
+    border-radius:8px 8px 0 0;
+    cursor:pointer;
+    white-space:nowrap;
+    opacity:0.65;
+    transition:opacity .15s, background .15s;
+  }
+  .tab.active{
+    opacity:1;
+    background:var(--paper);
+    color:var(--cover);
+  }
+  .tab:hover{opacity:0.9;}
+
+  /* ===== Paper panel ===== */
+  .paper{
+    background:var(--paper);
+    border-radius:0 10px 10px 10px;
+    padding:26px 24px 30px;
+    box-shadow:0 14px 30px rgba(0,0,0,0.28);
+    background-image:repeating-linear-gradient(180deg, transparent 0 39px, var(--paper-line) 39px 40px);
+    background-position:0 6px;
+  }
+  .panel{display:none;}
+  .panel.active{display:block; animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h2.section-title{
+    font-family:'Fraunces',serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--cover);
+    margin:0 0 4px;
+  }
+  .section-desc{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    max-width:640px;
+  }
+
+  /* Map table */
+  table.map-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    background:var(--card);
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  }
+  table.map-table th{
+    background:var(--cover);
+    color:#F3EFE1;
+    text-align:left;
+    padding:10px 12px;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  table.map-table td{
+    padding:11px 12px;
+    border-top:1px solid #EFE9D8;
+    vertical-align:top;
+  }
+  table.map-table tr:nth-child(even) td{background:#FBF8ED;}
+
+  .concept-box{
+    background:var(--card);
+    border:1px solid #EFE6C8;
+    border-left:4px solid var(--brass);
+    border-radius:8px;
+    padding:16px 18px;
+    margin:14px 0;
+    font-size:14.5px;
+    line-height:1.6;
+  }
+  .concept-box b{color:var(--cover);}
+  .rule-table{width:100%; border-collapse:collapse; margin-top:10px; font-size:13.5px;}
+  .rule-table td, .rule-table th{padding:8px 10px; border-bottom:1px solid #EFE6C8;}
+  .rule-table th{color:var(--cover); text-align:left; font-size:12px;}
+  .pill{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:12.5px;
+    padding:2px 8px;
+    border-radius:5px;
+  }
+  .pill.plus{background:#E4F2E9;color:var(--income);}
+  .pill.minus{background:#F7E6E5;color:var(--expense);}
+
+  /* Question cards */
+  .qcard{
+    background:var(--card);
+    border:1px solid #EFE6C8;
+    border-radius:10px;
+    padding:16px 18px 18px;
+    margin-bottom:14px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.04);
+  }
+  .qnum{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--brass);
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .qtext{font-size:14.5px; margin:6px 0 12px; line-height:1.55;}
+  .options{display:flex; flex-direction:column; gap:8px;}
+  .opt{
+    text-align:left;
+    border:1px solid #E4DABF;
+    background:#FFFEF9;
+    border-radius:7px;
+    padding:9px 12px;
+    font-size:13.5px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--brass);}
+  .opt.correct{background:#E4F2E9;border-color:var(--income);color:var(--income);font-weight:600;}
+  .opt.wrong{background:#F7E6E5;border-color:var(--expense);color:var(--expense);font-weight:600;}
+  .opt:disabled{cursor:default;}
+
+  .input-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .input-row input{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid #E4DABF;
+    border-radius:7px;
+    width:170px;
+    background:#FFFEF9;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    background:var(--cover);
+    color:#F3EFE1;
+    border:none;
+    padding:9px 16px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--cover-2);}
+  .btn.ghost{
+    background:transparent;
+    color:var(--cover);
+    border:1px solid var(--cover);
+  }
+  .btn.small{padding:6px 12px; font-size:12.5px;}
+
+  .feedback{
+    margin-top:10px;
+    font-size:13.5px;
+    padding:10px 12px;
+    border-radius:7px;
+    display:none;
+    line-height:1.55;
+  }
+  .feedback.show{display:block;}
+  .feedback.ok{background:#E4F2E9;color:var(--income);}
+  .feedback.bad{background:#F7E6E5;color:var(--expense);}
+
+  .stamp{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:.08em;
+    padding:3px 10px;
+    border:2px solid currentColor;
+    border-radius:5px;
+    transform:rotate(-3deg);
+    margin-right:8px;
+  }
+
+  .footer-note{
+    text-align:center;
+    color:#C9C2AC;
+    font-size:12px;
+    margin-top:18px;
+  }
+  .footer-note a{color:var(--brass-light);}
+
+  .exam-controls{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+  .divider{height:1px;background:#EFE6C8;margin:22px 0;}
+
+  @media (max-width:560px){
+    .paper{padding:20px 16px 24px;}
+    table.map-table{font-size:12px;}
+    .input-row input{width:130px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="cover">
+    <div class="cover-eyebrow">Fase D · Kelas 7 Semester 1 · Kurikulum Merdeka</div>
+    <h1 class="cover-title">Buku Tabungan Ilmu<br>Akuntan Cilik</h1>
+    <p class="cover-sub">Belajar bilangan bulat, aritmetika sosial, dan aljabar dasar lewat kacamata seorang akuntan. Setiap soal yang benar menambah saldo ilmumu.</p>
+    <div class="passbook-row">
+      <div class="stat">
+        <div class="stat-label">Saldo Ilmu</div>
+        <div class="stat-value" id="statBalance">Rp 0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Soal Terjawab Benar</div>
+        <div class="stat-value small" id="statCorrect">0 / 30</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Status</div>
+        <div class="stat-value small" id="statStatus">Baru mulai</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-panel="peta">0 · Peta</div>
+    <div class="tab" data-panel="bab1">1 · Arus Kas</div>
+    <div class="tab" data-panel="bab2">2 · Sosial</div>
+    <div class="tab" data-panel="bab3">3 · Aljabar</div>
+    <div class="tab" data-panel="ujian">4 · Ujian Campuran</div>
+  </div>
+
+  <div class="paper">
+
+    <!-- PETA -->
+    <div class="panel active" id="panel-peta">
+      <h2 class="section-title">Peta Kurikulum Akuntan Cilik</h2>
+      <p class="section-desc">Tiga bab Kelas 7 Semester 1, dan bagaimana akuntan sungguhan memakainya sehari-hari.</p>
+      <table class="map-table">
+        <tr><th>Bab Matematika</th><th>Nama di Dunia Akuntan</th><th>Fungsinya</th></tr>
+        <tr><td><b>Bilangan Bulat</b></td><td>Arus Kas (Cash Flow)</td><td>Mencatat uang masuk & keluar supaya tahu untung atau rugi</td></tr>
+        <tr><td><b>Aritmetika Sosial</b></td><td>Laba Rugi & Perpajakan</td><td>Menghitung diskon, bunga, pajak, dan margin keuntungan</td></tr>
+        <tr><td><b>Aljabar Dasar</b></td><td>Persamaan Akuntansi</td><td>Mencari angka yang hilang dari Aset, Utang, dan Modal</td></tr>
+      </table>
+      <div class="concept-box">
+        <b>Cara pakai buku ini:</b> kerjakan Bab 1 → 2 → 3 secara berurutan, lalu coba <b>Ujian Campuran</b> yang mengacak soal dari ketiga bab. Progresmu tersimpan otomatis di perangkat ini, jadi kamu bisa lanjut kapan saja.
+      </div>
+    </div>
+
+    <!-- BAB 1 -->
+    <div class="panel" id="panel-bab1">
+      <h2 class="section-title">Bab 1 — Bilangan Bulat & Arus Kas</h2>
+      <p class="section-desc">Uang masuk = positif (+). Uang keluar / utang = negatif (−).</p>
+      <div class="concept-box">
+        <span class="pill plus">+ Masuk</span> pendapatan, penjualan, pelunasan piutang &nbsp;·&nbsp;
+        <span class="pill minus">− Keluar</span> beban, utang, biaya operasional
+        <table class="rule-table">
+          <tr><th>Operasi</th><th>Contoh</th><th>Hasil</th></tr>
+          <tr><td>(+) + (+)</td><td>untung + untung</td><td>makin besar untungnya</td></tr>
+          <tr><td>(+) + (−)</td><td>untung dikurangi beban</td><td>tergantung mana lebih besar</td></tr>
+          <tr><td>(−) + (−)</td><td>rugi ditambah rugi lagi</td><td>makin dalam kerugiannya</td></tr>
+          <tr><td>(−) − (−)</td><td>utang dikurangi (dilunasi)</td><td>dua minus jadi plus → utang berkurang</td></tr>
+        </table>
+      </div>
+      <div id="quiz-bab1"></div>
+    </div>
+
+    <!-- BAB 2 -->
+    <div class="panel" id="panel-bab2">
+      <h2 class="section-title">Bab 2 — Aritmetika Sosial</h2>
+      <p class="section-desc">Untung, rugi, diskon, bunga, dan pajak — inti dari laporan laba rugi.</p>
+      <div class="concept-box">
+        <b>Untung</b> = Harga Jual − Harga Modal &nbsp;|&nbsp;
+        <b>Harga diskon</b> = Harga awal × (1 − persen diskon) &nbsp;|&nbsp;
+        <b>Harga kena pajak</b> = Harga × (1 + persen pajak) &nbsp;|&nbsp;
+        <b>Bunga tunggal</b> = Modal × persen bunga
+      </div>
+      <div id="quiz-bab2"></div>
+    </div>
+
+    <!-- BAB 3 -->
+    <div class="panel" id="panel-bab3">
+      <h2 class="section-title">Bab 3 — Aljabar Dasar & Persamaan Akuntansi</h2>
+      <p class="section-desc">Rumus paling sakti seorang akuntan.</p>
+      <div class="concept-box">
+        <b>Aset = Utang + Modal</b>, sehingga:<br>
+        Utang = Aset − Modal &nbsp;·&nbsp; Modal = Aset − Utang<br>
+        Bentuk aljabar biasa seperti <i>x + 5 = 12</i> juga dipakai untuk mencari angka yang hilang.
+      </div>
+      <div id="quiz-bab3"></div>
+    </div>
+
+    <!-- UJIAN -->
+    <div class="panel" id="panel-ujian">
+      <h2 class="section-title">Ujian Campuran — Uji Ketangkasan Akuntan Cilik</h2>
+      <p class="section-desc">15 soal acak dari ketiga bab. Klik "Acak Soal Baru" kapan saja untuk latihan ulang dengan set berbeda — cocok untuk belajar berkelanjutan.</p>
+      <div class="exam-controls">
+        <button class="btn" id="btnShuffle">🔀 Acak Soal Baru</button>
+        <button class="btn ghost" id="btnResetProgress">Reset Semua Progres</button>
+      </div>
+      <div id="quiz-ujian"></div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">Progres tersimpan otomatis di perangkat ini · Semangat terus, calon akuntan! 🌟</div>
+</div>
+
+<script>
+// ============ DATA SOAL ============
+const BANK = {
+  bab1: [
+    {id:'b1-1', type:'mc', q:'Kak Ndaru menerima uang dari hasil jualan es kepal. Transaksi ini dicatat sebagai bilangan apa?', opts:['Negatif','Positif','Nol','Pecahan'], ans:1, exp:'Uang masuk / pendapatan selalu dicatat sebagai bilangan positif (+).'},
+    {id:'b1-2', type:'input', q:'Toko kue mencatat: Senin untung +Rp25.000, Selasa rugi Rp10.000, Rabu untung +Rp30.000. Berapa saldo akhirnya?', ans:45000, unit:'Rp', exp:'25.000 + (−10.000) + 30.000 = Rp45.000'},
+    {id:'b1-3', type:'mc', q:'Membayar utang ke supplier termasuk transaksi jenis apa?', opts:['Uang masuk (+)','Uang keluar (−)','Bukan transaksi kas','Aset tetap'], ans:1, exp:'Membayar utang berarti kas keluar, jadi dicatat negatif (−).'},
+    {id:'b1-4', type:'input', q:'Hitung: (−15.000) + (−20.000) = ?', ans:-35000, unit:'Rp', exp:'Dua kerugian dijumlahkan: −15.000 + (−20.000) = −35.000.'},
+    {id:'b1-5', type:'input', q:'Utang toko tercatat −Rp70.000. Setelah membayar sebagian, utang berkurang Rp30.000 (ditulis −(−30.000)). Berapa sisa utang sekarang?', ans:-40000, unit:'Rp', exp:'−70.000 − (−30.000) = −70.000 + 30.000 = −40.000 (sisa utang Rp40.000).'},
+    {id:'b1-6', type:'mc', q:'Manakah yang menunjukkan kerugian TERBESAR?', opts:['−Rp15.000','−Rp50.000','−Rp5.000','+Rp10.000'], ans:1, exp:'Semakin kecil (semakin negatif) angkanya, semakin besar kerugiannya. −50.000 adalah yang terbesar.'},
+    {id:'b1-7', type:'input', q:'Kas kedai minuman: +120.000, −45.000, −30.000, +90.000. Berapa saldo akhir?', ans:135000, unit:'Rp', exp:'120.000 − 45.000 − 30.000 + 90.000 = Rp135.000'},
+    {id:'b1-8', type:'mc', q:'Jika saldo kas akhir bernilai negatif, artinya bisnis...', opts:['Untung besar','Kekurangan kas / merugi','Sedang libur','Menambah aset'], ans:1, exp:'Saldo negatif berarti uang yang keluar lebih besar daripada yang masuk.'},
+    {id:'b1-9', type:'input', q:'Hitung: (−25.000) + 40.000 = ?', ans:15000, unit:'Rp', exp:'−25.000 + 40.000 = 15.000'},
+    {id:'b1-10', type:'input', q:'Pendapatan +200.000, beban sewa −75.000, beban listrik −25.000, bayar utang −50.000. Saldo akhir?', ans:50000, unit:'Rp', exp:'200.000 − 75.000 − 25.000 − 50.000 = Rp50.000'}
+  ],
+  bab2: [
+    {id:'b2-1', type:'input', q:'Modal Rp8.000, dijual Rp12.000. Berapa untungnya?', ans:4000, unit:'Rp', exp:'Untung = Harga Jual − Modal = 12.000 − 8.000 = Rp4.000'},
+    {id:'b2-2', type:'input', q:'Modal Rp15.000, terpaksa dijual Rp12.000 karena kadaluarsa. Berapa besar KERUGIANNYA (tulis angka positif)?', ans:3000, unit:'Rp', exp:'Rugi = Modal − Harga Jual = 15.000 − 12.000 = Rp3.000'},
+    {id:'b2-3', type:'input', q:'Harga barang Rp50.000 didiskon 20%. Berapa harga setelah diskon?', ans:40000, unit:'Rp', exp:'50.000 × (1 − 0,20) = 50.000 × 0,8 = Rp40.000'},
+    {id:'b2-4', type:'input', q:'Setelah didiskon 10%, harga sebuah tas menjadi Rp45.000. Berapa harga awal sebelum diskon?', ans:50000, unit:'Rp', exp:'Harga awal = 45.000 ÷ 0,9 = Rp50.000'},
+    {id:'b2-5', type:'mc', q:'Rumus untung yang benar adalah...', opts:['Harga Jual + Modal','Harga Jual − Modal','Modal − Harga Jual','Modal × Harga Jual'], ans:1, exp:'Untung = Harga Jual − Harga Modal.'},
+    {id:'b2-6', type:'input', q:'Modal Rp100.000, ingin untung 15% dari modal. Berapa harga jualnya?', ans:115000, unit:'Rp', exp:'100.000 × (1 + 0,15) = Rp115.000'},
+    {id:'b2-7', type:'input', q:'Tabungan Rp500.000 dengan bunga tunggal 5% per tahun. Berapa bunga yang didapat setelah 1 tahun?', ans:25000, unit:'Rp', exp:'Bunga = 500.000 × 5% = Rp25.000'},
+    {id:'b2-8', type:'input', q:'Harga barang Rp200.000 dikenai pajak 10%. Berapa total yang harus dibayar?', ans:220000, unit:'Rp', exp:'200.000 × (1 + 0,10) = Rp220.000'},
+    {id:'b2-9', type:'input', q:'Modal Rp40.000, dijual Rp50.000. Berapa persen keuntungannya dari modal? (tulis angka saja, misal 25 untuk 25%)', ans:25, unit:'%', exp:'Untung 10.000 ÷ Modal 40.000 × 100% = 25%'},
+    {id:'b2-10', type:'input', q:'Harga Rp100.000 didiskon 10%, lalu hasilnya didiskon lagi 5%. Berapa harga akhirnya?', ans:85500, unit:'Rp', exp:'100.000 × 0,9 = 90.000, lalu 90.000 × 0,95 = Rp85.500'}
+  ],
+  bab3: [
+    {id:'b3-1', type:'input', q:'Aset toko Rp1.000.000, Modal Rp600.000. Berapa Utangnya?', ans:400000, unit:'Rp', exp:'Utang = Aset − Modal = 1.000.000 − 600.000 = Rp400.000'},
+    {id:'b3-2', type:'input', q:'Utang Rp250.000, Modal Rp750.000. Berapa total Aset?', ans:1000000, unit:'Rp', exp:'Aset = Utang + Modal = 250.000 + 750.000 = Rp1.000.000'},
+    {id:'b3-3', type:'input', q:'Aset Rp2.000.000, Utang Rp800.000. Berapa Modalnya?', ans:1200000, unit:'Rp', exp:'Modal = Aset − Utang = 2.000.000 − 800.000 = Rp1.200.000'},
+    {id:'b3-4', type:'input', q:'Selesaikan: x + 15.000 = 40.000. Berapa nilai x?', ans:25000, unit:'Rp', exp:'x = 40.000 − 15.000 = 25.000'},
+    {id:'b3-5', type:'input', q:'Selesaikan: x − 20.000 = 10.000. Berapa nilai x?', ans:30000, unit:'Rp', exp:'x = 10.000 + 20.000 = 30.000'},
+    {id:'b3-6', type:'input', q:'Selesaikan: 2x = 90.000. Berapa nilai x?', ans:45000, unit:'Rp', exp:'x = 90.000 ÷ 2 = 45.000'},
+    {id:'b3-7', type:'input', q:'Selesaikan: x ÷ 4 = 25.000. Berapa nilai x?', ans:100000, unit:'Rp', exp:'x = 25.000 × 4 = 100.000'},
+    {id:'b3-8', type:'mc', q:'Dalam Aset = Utang + Modal, jika Utang bertambah dan Modal tetap, maka Aset akan...', opts:['Berkurang','Bertambah','Tetap sama','Menjadi nol'], ans:1, exp:'Karena Aset = Utang + Modal, jika salah satu ruas kanan bertambah, Aset (ruas kiri) juga bertambah.'},
+    {id:'b3-9', type:'input', q:'Modal Rp500.000, Utang Rp300.000. Berapa Asetnya?', ans:800000, unit:'Rp', exp:'Aset = Modal + Utang = 500.000 + 300.000 = Rp800.000'},
+    {id:'b3-10', type:'input', q:'Selesaikan: 3x − 10.000 = 50.000. Berapa nilai x?', ans:20000, unit:'Rp', exp:'3x = 60.000, maka x = 60.000 ÷ 3 = 20.000'}
+  ]
+};
+const ALL_IDS = [...BANK.bab1, ...BANK.bab2, ...BANK.bab3].map(q=>q.id);
+const TOTAL_Q = ALL_IDS.length;
+
+// ============ STATE & STORAGE ============
+let progress = {}; // {id: true/false}
+const STORAGE_KEY = 'akuntan-cilik-progress-v1';
+
+async function loadProgress(){
+  try{
+    const r = await window.storage.get(STORAGE_KEY, false);
+    if(r && r.value) progress = JSON.parse(r.value);
+  }catch(e){ progress = {}; }
+  refreshStats();
+}
+async function saveProgress(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(progress), false); }catch(e){}
+}
+function refreshStats(){
+  const correctCount = Object.values(progress).filter(v=>v===true).length;
+  document.getElementById('statCorrect').textContent = correctCount + ' / ' + TOTAL_Q;
+  document.getElementById('statBalance').textContent = 'Rp ' + (correctCount*10000).toLocaleString('id-ID');
+  let status = 'Baru mulai';
+  if(correctCount >= TOTAL_Q) status = 'Akuntan Cilik Andal!';
+  else if(correctCount >= TOTAL_Q*0.6) status = 'Sudah jago!';
+  else if(correctCount > 0) status = 'Terus semangat';
+  document.getElementById('statStatus').textContent = status;
+}
+
+// ============ RENDER SOAL ============
+function parseNumber(str){
+  if(str===null || str===undefined) return NaN;
+  let s = String(str).trim().toLowerCase();
+  s = s.replace(/rp/g,'').replace(/%/g,'').trim();
+  let neg = false;
+  if(s.startsWith('-')){ neg = true; s = s.slice(1); }
+  s = s.replace(/[.\s]/g,'').replace(/,/g,'.');
+  let n = parseFloat(s);
+  if(isNaN(n)) return NaN;
+  return neg ? -n : n;
+}
+
+function renderQuestion(item, index, containerNode){
+  const card = document.createElement('div');
+  card.className = 'qcard';
+  const already = progress[item.id];
+  card.innerHTML = `
+    <div class="qnum">Soal ${index+1}</div>
+    <div class="qtext">${item.q}</div>
+    ${item.type==='mc' ? renderOptions(item) : renderInput(item)}
+    <div class="feedback" id="fb-${item.id}"></div>
+  `;
+  containerNode.appendChild(card);
+  attachHandlers(item, card, already);
+}
+
+function renderOptions(item){
+  return `<div class="options">` + item.opts.map((o,i)=>
+    `<button class="opt" data-i="${i}">${o}</button>`
+  ).join('') + `</div>`;
+}
+function renderInput(item){
+  return `<div class="input-row">
+    <input type="text" placeholder="${item.unit==='%' ? 'Contoh: 25' : 'Contoh: 40000'}" id="in-${item.id}">
+    <button class="btn small" data-check="${item.id}">Cek Jawaban</button>
+  </div>`;
+}
+
+function attachHandlers(item, card, prevState){
+  const fb = card.querySelector('#fb-' + item.id);
+  function lockOptions(chosenIdx){
+    card.querySelectorAll('.opt').forEach((b,i)=>{
+      b.disabled = true;
+      if(i === item.ans) b.classList.add('correct');
+      else if(i === chosenIdx) b.classList.add('wrong');
+    });
+  }
+  function showFeedback(correct){
+    fb.classList.add('show');
+    fb.classList.remove('ok','bad');
+    fb.classList.add(correct ? 'ok' : 'bad');
+    const stamp = correct ? '<span class="stamp">BENAR ✓</span>' : '<span class="stamp">COBA LAGI</span>';
+    fb.innerHTML = stamp + item.exp;
+    progress[item.id] = correct;
+    saveProgress();
+    refreshStats();
+  }
+  if(item.type === 'mc'){
+    card.querySelectorAll('.opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.i);
+        lockOptions(idx);
+        showFeedback(idx === item.ans);
+      });
+    });
+  } else {
+    const checkBtn = card.querySelector('[data-check]');
+    const input = card.querySelector('#in-' + item.id);
+    checkBtn.addEventListener('click', ()=>{
+      const val = parseNumber(input.value);
+      if(isNaN(val)){
+        fb.classList.add('show'); fb.classList.remove('ok'); fb.classList.add('bad');
+        fb.innerHTML = '<span class="stamp">?</span>Tulis jawabanmu dalam bentuk angka dulu, ya.';
+        return;
+      }
+      const correct = Math.abs(val - item.ans) < 0.01;
+      input.disabled = true;
+      checkBtn.disabled = true;
+      showFeedback(correct);
+    });
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') checkBtn.click(); });
+  }
+}
+
+function renderBab(babKey, containerId){
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  BANK[babKey].forEach((item, i)=> renderQuestion(item, i, container));
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function renderUjian(){
+  const container = document.getElementById('quiz-ujian');
+  container.innerHTML = '';
+  const pool = shuffle(ALL_IDS.map(id => [...BANK.bab1,...BANK.bab2,...BANK.bab3].find(q=>q.id===id)));
+  const picked = pool.slice(0,15);
+  picked.forEach((item,i)=> renderQuestion(item, i, container));
+}
+
+// ============ TABS ============
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.tab');
+  if(!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+});
+
+document.getElementById('btnShuffle').addEventListener('click', renderUjian);
+document.getElementById('btnResetProgress').addEventListener('click', async ()=>{
+  if(confirm('Yakin ingin menghapus semua progres dan mulai dari awal lagi?')){
+    progress = {};
+    await saveProgress();
+    refreshStats();
+    renderBab('bab1','quiz-bab1');
+    renderBab('bab2','quiz-bab2');
+    renderBab('bab3','quiz-bab3');
+    renderUjian();
+  }
+});
+
+// ============ INIT ============
+(async function init(){
+  await loadProgress();
+  renderBab('bab1','quiz-bab1');
+  renderBab('bab2','quiz-bab2');
+  renderBab('bab3','quiz-bab3');
+  renderUjian();
+})();
+</script>
+</body>
+</html>
